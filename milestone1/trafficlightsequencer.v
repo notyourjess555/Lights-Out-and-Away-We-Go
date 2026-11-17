@@ -70,9 +70,9 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, player1_press, LEDR, sta
             lights <= 5'b00000;
             
             if(player1_press)
-                start_timer <= 1'b1;
-            else
                 start_timer <= 1'b0;
+            else
+                start_timer <= 1'b1;
 
         end
     end
