@@ -1,11 +1,9 @@
-module userinput(KEY, CLOCK_50, player1_press, ligthsOff);
+module userinput(KEY, CLOCK_50, player1_press, start_game_signal);
 
 
     input CLOCK_50;
     input [1:0] KEY;
-	 input lightsOff;
-    //output reg start_game;
-    output reg player1_press;
+	input lightsOff;
     //output reg falseStart;
 
     //for milestone1
@@ -24,24 +22,27 @@ module userinput(KEY, CLOCK_50, player1_press, ligthsOff);
     //detect false start
 
     //-------code-------    
-    //reg start_game
     //reg round_done;
-   //reg player1_time
+    //reg player1_time
+
+    
     reg previous_key;
-	 output reg start_game_signal;
+	output reg start_game_signal;
+    output reg player1_press;
 
     //variables
     always@(posedge CLOCK_50)
     begin
-        //if(player1_press == 1'b0)
-        //begin
-        if (KEY[0] == 1'b0) begin
+        if(KEY[0] == 1'b0)
+        begin
             previous_key <= 1'b1;
             player1_press <= 1'b0;
+            start_game_signal <= 1'b0;
         end
-        else begin
-            // KEY[1] is active-low
-            player1_press <= (previous_key && !KEY[1]);
+        else 
+        begin
+            start_game_signal <= (previous_key && !KEY[1]);
+            player1_press <= (previous_key && !KEY[1]); //previous release (1), now pressed (0)
             previous_key <= KEY[1];
         end
     end
@@ -49,5 +50,4 @@ module userinput(KEY, CLOCK_50, player1_press, ligthsOff);
 
 endmodule
      
-
 
