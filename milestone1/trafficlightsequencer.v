@@ -18,13 +18,14 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, player1_press, LEDR, sta
     input [1:0] KEY;
     input CLOCK_50, one_second;
     input start_game_signal;
+	 input player1_press;
 	
     //input go_signal; 
     output [5:0] LEDR;
 
     //variables
     reg [4:0] lights;
-    output lights_done, 
+    output lights_done;
     output reg start_timer;
 
     //check if first start
@@ -62,7 +63,7 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, player1_press, LEDR, sta
         end
         else if (game_started && one_second && lights != 5'b11111)
         begin
-            lights <= {1'b1, lights [3:0]};
+            lights <= {1'b1, lights [4:1]};
             start_timer <= 1'b0;
         end
         else if(go_signal)
