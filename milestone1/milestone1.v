@@ -1,4 +1,4 @@
-module top(
+module milestone1(
     input CLOCK_50,
     input [1:0] KEY,
     output [5:0] LEDR
@@ -7,6 +7,7 @@ module top(
     wire one_second;
     wire one_millisecond;
     wire player1_press;
+	 
 
     // Game clock
     gameclock U1(
@@ -21,8 +22,8 @@ module top(
         .KEY(KEY),
         .CLOCK_50(CLOCK_50),
         .one_second(one_second),
-        .go_signal(1'b0),
-        .LEDR(LEDR)
+        .LEDR(LEDR),
+		  .start_game_signal(1'b0)
     );
 
     // User input
