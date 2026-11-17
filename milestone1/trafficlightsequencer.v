@@ -1,4 +1,4 @@
-module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal);
+module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal, lightsoff);
 
     //idea
     //1. all 5 lights off
@@ -45,32 +45,10 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal)
 
 	always @(posedge CLOCK_50) begin
 	 if (KEY[0] == 1'b0) begin
-		  state <= LIGHT_SEQUENCE;
 		  go_signal <= 1'b0;
 	 end
-	 else begin
-		  case (state)
-
-				LIGHT_SEQUENCE: begin
-					 go_signal <= 1'b0;
-
-					 if (lights_done)
-						  state <= WAIT_ONE_SECOND;
-				end
-
-				WAIT_ONE_SECOND: begin
-					 if (one_second) begin
-						  go_signal <= 1'b1;
-						  state <= GO;
-					 end
-				end
-
-				GO: begin
-					 go_signal <= 1'b1;
-				end
-
-		  endcase
-	 end
+	 else if (lightsOff && one_second)
+		go_signal <= 1'b1;
 	end
 
     always@(posedge CLOCK_50)
@@ -87,7 +65,7 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal)
 
     assign LEDR[4:0] = lights;
     assign LEDR[5] = ~KEY[0];
-	assign lightsOff = (lights == 5'b00000);
+	assign lightsOff = (lights == 5'b11111);//1 for testing now, 0 later, this is use to tell timer to start counting
 	 
 	 
 
