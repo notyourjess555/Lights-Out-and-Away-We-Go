@@ -1,4 +1,4 @@
-module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal, lightsoff);
+module trafficlightsequencer(KEY, CLOCK_50, one_second, player1_press, LEDR, start_game_signal, start_timer ,lights_done);
 
     //idea
     //1. all 5 lights off
@@ -24,7 +24,8 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal,
 
     //variables
     reg [4:0] lights;
-    output lightsOff;
+    output lights_done, 
+    output reg start_timer;
 
     //check if first start
     reg game_started;
@@ -39,33 +40,48 @@ module trafficlightsequencer(KEY, CLOCK_50, one_second, LEDR, start_game_signal,
 
     //control lights like shift registor
 	 
-	 //using one sec to try: use random later
-	reg [1:0] state;
+	//using one sec to try: use random later
 	reg go_signal;
 
-	always @(posedge CLOCK_50) begin
-	 if (KEY[0] == 1'b0) begin
+	always @(posedge CLOCK_50) 
+    begin
+	    if (KEY[0] == 1'b0) begin
 		  go_signal <= 1'b0;
-	 end
-	 else if (lightsOff && one_second)
-		go_signal <= 1'b1;
 	end
+	    else if (lights_done && one_second)
+		    go_signal <= 1'b1;
+	end
+		 
 
     always@(posedge CLOCK_50)
     begin
         if(KEY[0]== 1'b0)
+        begin
             lights <= 5'b00000;
+            start_timer <= 1'b0;
+        end
         else if (game_started && one_second && lights != 5'b11111)
-            lights <= {lights [3:0], 1'b1};
+        begin
+            lights <= {1'b1, lights [3:0]};
+            start_timer <= 1'b0;
+        end
         else if(go_signal)
         begin
             lights <= 5'b00000;
+            
+            if(player1_press)
+                start_timer <= 1'b1;
+            else
+                start_timer <= 1'b0;
+
         end
     end
 
     assign LEDR[4:0] = lights;
     assign LEDR[5] = ~KEY[0];
-	assign lightsOff = (lights == 5'b11111);//1 for testing now, 0 later, this is use to tell timer to start counting
+
+    //all lights up, replace with random num 
+    assign lights_done = (lights == 5'b11111);
 	 
 	 
 
