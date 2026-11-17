@@ -6,7 +6,9 @@ module milestone1(
 
     wire one_second;
     wire one_millisecond;
+    wire start_game_signal;
     wire player1_press;
+    wire lightsOff;
 	 
 
     // Game clock
@@ -23,13 +25,14 @@ module milestone1(
         .CLOCK_50(CLOCK_50),
         .one_second(one_second),
         .LEDR(LEDR),
-		  .start_game_signal(1'b0)
+		.start_game_signal(start_game_signal)
     );
 
     // User input
     userinput U3(
         .CLOCK_50(CLOCK_50),
         .KEY(KEY),
+        .start_game_signal(start_game_signal),
         .player1_press(player1_press)
     );
 
