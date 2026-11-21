@@ -1,53 +1,61 @@
-module userinput(KEY, CLOCK_50, player1_press, start_game_signal);
+// ============================================================================
+// userinput.v 
+//
+// ROLE: turn buttons into clean 1-cycle "press" pulses.
+//  For each button:
+//  1. detect the moments from released -> pressed
+//  2. output a pulse that is high for one clock cycle
+//
+// (for testing) 
+// DE1-SoC KEYs are active-low: 0 = pressed, 1 = released.
+//
+// KEY function (single player):
+//  KEY[3] -> start_pulse   (start around / go back to start screen)
+//  KEY[1] -> p1_pulse      (player 1 reaction button)
+// ============================================================================
+
+module userinput(CLOCK_50, resetn, KEY, start_pulse, p1_pulse);
 
 
     input CLOCK_50;
-    input [1:0] KEY;
-	input lightsOff;
-    //output reg falseStart;
-
-    //for milestone1
-    //LEDR as traffic lights
-    //LEDR[5] - indicate reset, start of the game
-    //LEDR[4:0] - the traffic lights, turn off sequencly
-
-
-    //idea: 
-    //1. LEDR[5] is on when game not start OR reset is pressed (KEY[0])
-    //2. user watches the sequence turn off
-    //3. user press KEY[1]
-
-    //function of userinput.v
-    //detect key inputs (select & reset)
-    //detect false start
-
-    //-------code-------    
-    //reg round_done;
-    //reg player1_time
+    input resetn;
+    input [3:0] KEY;
+	output start_pulse;
+    output p1_pulse;
 
     
-    reg previous_key;
-	output reg start_game_signal;
-    output reg player1_press;
+    //-------code-------    
 
-    //variables
-    always@(posedge CLOCK_50)
-    begin
-        if(KEY[0] == 1'b0)
+    key_pulse start_button(CLOCK_50, resetn, KEY[3], start_pulse);
+    key_pulse p1_button(CLOCK_50, resetn, KEY[1], p1_pulse);
+
+endmodule
+
+//helper function
+module key_pulse(CLOCK_50, resetn, key, press_pulse);
+
+    input CLOCK_50;
+    input resetn;
+    input key;
+    output press_pulse;
+
+    reg current_press;
+    reg press_last_cycle;
+
+    always @(posedge CLOCK_50) begin
+        if (!resetn) 
         begin
-            previous_key <= 1'b1;
-            player1_press <= 1'b0;
-            start_game_signal <= 1'b0;
+            current_press <= 1'b0;
+            press_last_cycle <= 1'b0;
         end
         else 
         begin
-            start_game_signal <= (previous_key && !KEY[1]);
-            player1_press <= (previous_key && !KEY[1]); //previous release (1), now pressed (0)
-            previous_key <= KEY[1];
+            //invert the active low, 1 = pressed, 0 = not pressed
+            current_press <= ~key;  
+            press_last_cycle <= current_press;
         end
     end
 
+    assign press_pulse = current_press && ~press_last_cycle;
 
 endmodule
-     
-
