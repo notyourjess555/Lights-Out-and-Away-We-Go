@@ -1,17 +1,40 @@
-module timer (KEY, CLOCK_50, one_millisecond, start_timer, reaction_time);
+// ============================================================================
+// timer.v 
+//
+// ROLE: measure ONE player's reaction time in ms.
+//  1. clear = 1   -> reset to 0 (controller in IDLE)
+//  2. running = 1 -> count every ms (controller in GO)
+//  3. stop_pulse  -> freeze the time and set finished = 1 (until next clear, to displayed)
+//
+// ============================================================================
 
-    input [0:0] KEY;
+module timer (CLOCK_50, resetn, one_millisecond, clear, run, stop_pulse, reaction_time, finished);
+
+     //------------code------------//
+    input CLOCK_50;
+    input resetn;
     input one_millisecond;
-    input player1_press;
-    input CLOCK_50, start_timer;
-    output [16:0] reg reaction_time;
+    input clear;
+    input run;
+    input stop_pulse;
+
+    output reg [15:0] reaction_time;
+    output reg finished; //signal to froze time
 
     always@(posedge CLOCK_50)
     begin
-        if(KEY[0] == 1'b0)
+        if(!resetn || clear)
+        begin
             reaction_time <= 16'b0;
-        else if(start_timer && one_millisecond)
-            reaction_time <= reaction_time + 1'b1;
+            finished <= 1'b0;
+        end
+        else if(run && !finished) 
+        begin
+            if(stop_pulse)
+                finished <= 1'b1;
+            else if(one_millisecond)
+                reaction_time <= reaction_time + 1'b1; 
+        end
     end
 
 endmodule
