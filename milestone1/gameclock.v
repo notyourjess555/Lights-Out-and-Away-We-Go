@@ -1,62 +1,43 @@
+// ============================================================================
+// gameclock.v  -  "the official race clock"
+//
+// ROLE: 1. turn the 50 MHz board clock into one time base for the whole game.
+//       2. Outputs a 1-cycle pulse every 1 ms.
+//       3. Every delay (light spacing, random hold, reaction time) is counted in these ms ticks
+//
+// NOTE: one_millisecond is an ENABLE. All logic still runs when tick_ms == 1.
+//
+// MODELSIM: set counter != to a smaller number (e.g. 2)
+// ============================================================================
+
 module gameclock(CLOCK_50, KEY, one_second, one_millisecond);
-
-    //enable = 1 every 1 ms
-    //using clock 50 as per unit: 1 millisecond (ms) | 50,000000 clock cycles
-
-    //function of timer.v
-    //1. act as general clock input for logics
-    //2. used for reaction speedtimer
 
     //------------code------------//
 
     input CLOCK_50;
-    input [0:0]KEY;
-    output reg one_second;
+    input resetn;
     output reg one_millisecond;
 
-    //1 second clock section
-    reg [25:0] counter;  
-
-    always@(posedge CLOCK_50)
-    begin
-        if(KEY[0] == 1'b0)
-        begin
-            counter <= 26'b0;
-            one_second <= 1'b0;
-        end
-        else if(counter != 26'd49999999)
-        begin
-            counter <= counter + 1'b1;
-            one_second <= 1'b0;
-        end
-        else if(counter == 26'd49999999)
-        begin
-            counter <= 26'b0;
-            one_second <= 1'b1;
-        end
-    end
-
-    //1ms clock
-    reg [15:0] counter2;
+    //counter
+    reg [15:0] counter;
     
     always@(posedge CLOCK_50)
     begin
-        if(KEY[0] == 1'b0)
+        if(!resetn)
         begin
-            counter2 <= 16'b0;
+            counter <= 16'b0;
             one_millisecond <= 1'b0;
         end
-        else if(counter2 != 16'd49999)
+        else if(counter == 16'd49999)
         begin
-            counter2 <= counter2 + 1'b1;
-            one_millisecond <= 1'b0;
-        end
-        else if(counter2 == 16'd49999)
-        begin
-            counter2 <= 16'b0;
+            counter <= 16'b0;
             one_millisecond <= 1'b1;
         end
+        else
+        begin
+            counter <= counter + 16'b1;
+            one_millisecond <= 1'b0;
+        end
     end
-
 
 endmodule
