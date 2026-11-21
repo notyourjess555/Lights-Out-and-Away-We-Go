@@ -106,7 +106,7 @@ p1_finished, random_num, state, lights, p1_false_start);
 
                     if(lights==5'b11110)
                     begin
-                        wait_ms <= random_num; //TO ADD: the real random num gen
+                        wait_ms <= random_num * 14'd250; //TO ADD: the real random num gen
                         state <= WAIT;
                     end
                 end
