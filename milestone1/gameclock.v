@@ -5,12 +5,12 @@
 //       2. Outputs a 1-cycle pulse every 1 ms.
 //       3. Every delay (light spacing, random hold, reaction time) is counted in these ms ticks
 //
-// NOTE: one_millisecond is an ENABLE. All logic still runs when tick_ms == 1.
+// NOTE: one_millisecond is an ENABLE. 
 //
 // MODELSIM: set counter != to a smaller number (e.g. 2)
 // ============================================================================
 
-module gameclock(CLOCK_50, KEY, one_second, one_millisecond);
+module gameclock(CLOCK_50, resetn, one_millisecond);
 
     //------------code------------//
 
