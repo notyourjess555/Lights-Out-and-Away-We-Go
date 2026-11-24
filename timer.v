@@ -21,20 +21,47 @@ module timer (CLOCK_50, resetn, one_millisecond, clear, run, stop_pulse, reactio
     output reg [15:0] reaction_time;
     output reg finished; //signal to froze time
 
+     //NEW: BCD counter//
+     wire [3:0] ones, tens, hundreds, thousands;
+     assign ones = reaction_time[3:0];
+     assign tens = reaction_time[7:4];
+     assign hundreds = reaction_time[11:8];
+     assign thousands = reaction_time[15:12];
+
     always@(posedge CLOCK_50)
     begin
-        if(!resetn || clear)
+         if(!resetn || clear) //global reset, time specific reset
         begin
             reaction_time <= 16'b0;
             finished <= 1'b0;
         end
-        else if(run && !finished) 
+         else if(run && !finished) //run: start timer, finished: =1 means reacted
         begin
             if(stop_pulse)
                 finished <= 1'b1;
-            else if(one_millisecond)
-                reaction_time <= reaction_time + 1'b1; 
-        end
+             else if(one_millisecond && reaction_time != 16'h9999)
+          //new logic for display
+               if(ones != 4'd9) // not 9
+                      reaction_time[3:0] <= ones + 4'd1; 
+               else
+               begin
+                    reaction_time[3:0] <= 4'd0;
+                    if(tens != 4'd9)//if tens are not 9
+                         reaction_time[7:4] <= tens + 4'd1;
+                    else
+                    begin
+                         reaction_time[7:4] <= 4'd0;
+                         if(hundreds != 4'd9)// hundreds not 9
+                              reaction_time[11:8] <= hundreds + 4'd1;
+                         else
+                         begin
+                              reaction_time[11:8] <= 4'd0;
+                              reaction_time[15:12] <= thousand + 4'd1;
+                         end
+                    end
+                end
+                            
+          end
     end
 
 endmodule
