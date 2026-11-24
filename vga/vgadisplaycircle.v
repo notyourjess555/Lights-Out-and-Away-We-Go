@@ -274,7 +274,7 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
         .VGA_CLK(VGA_CLK));
 
 		defparam VGA.RESOLUTION = "320x240";
-		defparam VGA.BACKGROUND_IMAGE = "./black_320_9.mif";
+		defparam VGA.BACKGROUND_IMAGE = "./f1_home_320_9.mif";
 
 endmodule
 
