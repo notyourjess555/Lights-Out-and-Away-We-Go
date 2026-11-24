@@ -17,7 +17,7 @@
 //   LC - which light we are checking (0 = leftmost ... 4 = rightmost)
 //
 // STATES:
-//   CLEAR      - one pixel per clock, XC 0..639 then YC + 1, until (639,479)
+//   CLEAR      - one pixel per clock, XC 0..319 then YC + 1, until (319,239)
 //   WAIT       - hold all counters at 0, wait for lights to change
 //   CHECK      - did light LC change? yes -> DRAW_ROW, no -> NEXT_LIGHT
 //   DRAW_ROW   - draw one pixel of light LC per clock, XC + 1
@@ -51,10 +51,12 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
 
 
     //-------------screen-------------//
-    parameter X_START = 80;   //x of the leftmost light (top-left corner)
-    parameter Y_START = 100;   //y of all lights (top-left corner)
-    parameter SIZE = 24;       //each light is SIZE x SIZE pixels
-    parameter SPACING = 32;    //distance between the left edges of two lights
+	//change to match screen
+    parameter X_START = 97;   //x of the leftmost light (top-left corner)
+    parameter Y_START = 85;   //y of all lights (top-left corner)
+    parameter BOX_W = 14;      //each light box is BOX_W x BOX_H pixels
+    parameter BOX_H = 28;      //(2 bulbs stacked vertically)
+    parameter SPACING = 28;    //distance between the left edges of two lights
 
     parameter BLACK = 9'b000_000_000;  //colour = RRR GGG BBB
     parameter RED   = 9'b111_000_000;
@@ -65,22 +67,16 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
     parameter DARK_GREY = 9'b001_001_001;
 
     //NEW:-------------round light-------------//
-    parameter CENTER = 12;     //SIZE / 2
-    parameter INNER_R2 = 64;   //bulb radius 8  -> 8*8
-    parameter OUTER_R2 = 121;  //glow ring radius 11 -> 11*11
-
+    parameter CENTER_X = 7;    //bulb centre x inside the box
+    parameter CENTER_Y1 = 7;   //top bulb centre y inside the box
+    parameter CENTER_Y2 = 20;  //bottom bulb centre y inside the box
+    parameter INNER_R2 = 20;   //bulb radius ~4.5 -> 4.5*4.5
+    parameter OUTER_R2 = 42;   //glow ring radius ~6.5 -> 6.5*6.5
+	
     //------counters----//
     wire [8:0] XC; //X-coordinate
     wire [7:0] YC; //Y-coordinate
     wire [2:0] LC; //Light counter
-
-    reg [8:0] light_colour;
-    always@(*)
-    begin
-        if(dist2 < INNER_R2)        light_colour = target_on ? RED : GREY;            //bulb
-        else if(dist2 < OUTER_R2)   light_colour = target_on ? DARK_RED : DARK_GREY;  //glow ring
-        else                        light_colour = BLACK;                             //housing
-    end
 
     //-------------screen right now----------------//
     reg [4:0] drawn_lights;
@@ -107,9 +103,21 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
 
     wire signed [6:0] dx, dy;  //signed: negative = left of / above the centre
     wire [9:0] dist2;          //distance squared (no square root needed)
-    assign dx = $signed({2'b00, XC[4:0]}) - CENTER;
-    assign dy = $signed({2'b00, YC[4:0]}) - CENTER;
+    //Changed
+	//top half of the box -> measure from the top bulb
+	//bottom half -> from the bottom bulb
+    assign dx = $signed({2'b00, XC[4:0]}) - CENTER_X;
+    assign dy = (YC < 14) ? ($signed({2'b00, YC[4:0]}) - CENTER_Y1)
+                          : ($signed({2'b00, YC[4:0]}) - CENTER_Y2);
     assign dist2 = dx*dx + dy*dy;
+	
+	reg [8:0] light_colour;
+    always@(*)
+    begin
+        if(dist2 < INNER_R2)        light_colour = target_on ? RED : GREY;            //bulb
+        else if(dist2 < OUTER_R2)   light_colour = target_on ? DARK_RED : DARK_GREY;  //glow ring
+        else                        light_colour = BLACK;                             //housing
+    end
 
     //------------------------code------------------------//
 
@@ -136,10 +144,10 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
             CHECK: if(light_now != light_drawn) Y_D = DRAW_ROW;
                 else Y_D = NEXT_LIGHT;
 
-            DRAW_ROW:  if(XC != SIZE-1) Y_D = DRAW_ROW; //still inside this row
+			DRAW_ROW:  if(XC != BOX_W-1) Y_D = DRAW_ROW; //still inside this row
                 else Y_D = NEXT_ROW;
 
-            NEXT_ROW: if(YC != SIZE-1) Y_D = DRAW_ROW;  //more rows to draw
+			NEXT_ROW: if(YC != BOX_H-1) Y_D = DRAW_ROW;  //more rows to draw
                 else Y_D = NEXT_LIGHT;
 
             NEXT_LIGHT: if(LC != 3'd4) Y_D = CHECK;   //more lights to check
@@ -219,7 +227,7 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
     begin
         if(!resetn)
         begin
-            y_Q <= CLEAR;
+            y_Q <= WAIT; //changed from clear to wait, no earse
 
             //pretend all lights are ON, so the first pass draws all 5 grey
             //lights = 0 after reset
@@ -265,6 +273,9 @@ module vgadisplaycircle(CLOCK_50, resetn, lights, VGA_R, VGA_G, VGA_B, VGA_HS, V
         .VGA_SYNC_N(VGA_SYNC_N),
         .VGA_CLK(VGA_CLK));
 
+		defparam VGA.RESOLUTION = "320x240";
+		defparam VGA.BACKGROUND_IMAGE = "./black_320_9.mif";
+
 endmodule
 
 //n-bit up-counter with reset, load, and enable
@@ -282,6 +293,3 @@ module Up_count(R, Clock, Resetn, L, E, Q);
         else if(E)
             Q <= Q + 1'b1;
 endmodule
-
-defparam VGA.RESOLUTION = "320x240";
-defparam VGA.BACKGROUND_IMAGE = "./black_320_9.mif";
