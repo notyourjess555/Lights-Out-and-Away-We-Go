@@ -1,0 +1,15 @@
+module p1p2(KEY, SW, p1p2, CLOCK_50);
+    input SW;
+    input KEY;
+	 input CLOCK_50;
+    wire inp;
+    assign inp = SW;
+    reg p1orp2;
+    output p1p2;
+    always@(posedge CLOCK_50)
+    begin
+        if (!KEY)
+            p1orp2 <= inp;
+    end
+    assign p1p2 = p1orp2;
+endmodule

@@ -1,0 +1,40 @@
+// ============================================================================
+// hexdisplay.v - display react time with 7-segment pattern
+// note: DE1-SoC active-low: 0 = segment ON
+// HEX[0] = top, [1] = top right, [2] = bottom right, [3] = bottom,
+//               [4] = bottom left, [5] = top left, [6] = middle
+// ============================================================================
+
+module hexdisplay(digit, bestDigit, HEX, SW, state);
+    input SW;
+	 input [2:0] state;
+    input [3:0] digit;
+    input [3:0] bestDigit;
+    output reg [6:0] HEX;
+    reg [3:0] assignedDigits;
+
+    always@(*)
+    begin
+        assignedDigits = SW ? bestDigit : digit;
+		  if (state != 3'd4)
+		   	HEX =  7'b1111111;
+		  else
+		  begin
+        case(assignedDigits)
+            4'h0: HEX = 7'b1000000;
+            4'h1: HEX = 7'b1111001;
+            4'h2: HEX = 7'b0100100;
+            4'h3: HEX = 7'b0110000;
+            4'h4: HEX = 7'b0011001;
+            4'h5: HEX = 7'b0010010;
+            4'h6: HEX = 7'b0000010;
+            4'h7: HEX = 7'b1111000;
+            4'h8: HEX = 7'b0000000;
+            4'h9: HEX = 7'b0010000;
+            default: HEX = 7'b1111111;   //blank
+			
+        endcase
+		  end
+    end
+
+endmodule

@@ -1,0 +1,15 @@
+module bestscore(reaction, bestReact, CLOCK_50, resetn, done);
+    input [15:0] reaction;
+    output [15:0] bestReact;
+    input [2:0] done;
+    reg [15:0] currReact;
+    assign bestReact = currReact;
+    always@(posedge CLOCK_50)
+    begin
+        if (!resetn)
+            bestReact <= 16'hFFFF;
+        if ((done == 3'b4) && reaction < currReact & reaction > 16'd0)
+            currReact = reaction;
+            newTime
+    end
+endmodule
